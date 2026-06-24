@@ -1,0 +1,22 @@
+# Render Blueprint — deploys the FastAPI backend as a Docker web service.
+# In the Render dashboard: New → Blueprint → connect this repo. After the
+# frontend is live on Vercel, set CORS_ORIGINS to its URL (env var below).
+services:
+  - type: web
+    name: signal-clone-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "10080"
+      - key: MOCK_OTP
+        value: "123456"
+      # Comma-separated allowed frontend origins. Update to your Vercel URL
+      # once the frontend is deployed (e.g. https://your-app.vercel.app).
+      - key: CORS_ORIGINS
+        sync: false

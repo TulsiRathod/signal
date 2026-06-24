@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: 245 245 247;
+  --surface: 255 255 255;
+  --surface-2: 240 241 244;
+  --border: 226 228 233;
+  --text: 23 25 35;
+  --muted: 124 130 145;
+  --bubble-in: 233 234 238;
+  --bubble-out: 58 118 240;
+}
+
+.dark {
+  --bg: 17 18 23;
+  --surface: 27 29 36;
+  --surface-2: 36 39 48;
+  --border: 47 50 61;
+  --text: 233 235 240;
+  --muted: 142 148 162;
+  --bubble-in: 44 47 57;
+  --bubble-out: 58 118 240;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: rgb(var(--bg));
+  color: rgb(var(--text));
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Slim Signal-style scrollbars */
+.scroll-thin::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scroll-thin::-webkit-scrollbar-thumb {
+  background-color: rgb(var(--border));
+  border-radius: 9999px;
+}
+.scroll-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
