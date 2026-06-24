@@ -5,8 +5,8 @@ import SettingsModal from "@/components/modals/SettingsModal";
 import Avatar from "@/components/ui/Avatar";
 import { useStore } from "@/lib/store";
 import { conversationTitle } from "@/lib/utils";
-import { Menu, PenSquare, Search, Settings, Users, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Keyboard, Menu, PenSquare, Search, Settings, Users, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ConversationItem from "./ConversationItem";
 
 export default function Sidebar() {
@@ -17,6 +17,14 @@ export default function Sidebar() {
   const [showNewChat, setShowNewChat] = useState(false);
   const [showNewGroup, setShowNewGroup] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // Focus search when Ctrl/Cmd+K is pressed (dispatched from the page).
+  useEffect(() => {
+    const focusSearch = () => searchRef.current?.focus();
+    window.addEventListener("signal:focus-search", focusSearch);
+    return () => window.removeEventListener("signal:focus-search", focusSearch);
+  }, []);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -78,6 +86,15 @@ export default function Sidebar() {
                   >
                     <Settings size={16} /> Settings
                   </button>
+                  <button
+                    onClick={() => {
+                      window.dispatchEvent(new Event("signal:show-shortcuts"));
+                      setMenuOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2 px-4 py-2 text-sm text-txt hover:bg-surface2"
+                  >
+                    <Keyboard size={16} /> Keyboard shortcuts
+                  </button>
                 </div>
               </>
             )}
@@ -90,6 +107,7 @@ export default function Sidebar() {
         <div className="flex items-center gap-2 rounded-lg bg-surface2 px-3 py-2">
           <Search size={18} className="text-muted" />
           <input
+            ref={searchRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search"

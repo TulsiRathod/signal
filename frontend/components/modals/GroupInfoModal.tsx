@@ -20,8 +20,7 @@ export default function GroupInfoModal({ open, onClose, conversation }: Props) {
   const upsertConversation = useStore((s) => s.upsertConversation);
   const loadConversations = useStore((s) => s.loadConversations);
   const pushToast = useStore((s) => s.pushToast);
-  const isOnline = useStore((s) => s.isOnline);
-  const lastSeen = useStore((s) => s.lastSeen);
+  const presence = useStore((s) => s.presence);
 
   const [adding, setAdding] = useState(false);
   const [query, setQuery] = useState("");
@@ -103,7 +102,9 @@ export default function GroupInfoModal({ open, onClose, conversation }: Props) {
         ) : (
           other && (
             <p className="text-sm text-muted">
-              {isOnline(other.id) ? "online" : lastSeenText(lastSeen(other.id))}
+              {presence[other.id]?.is_online
+                ? "online"
+                : lastSeenText(presence[other.id]?.last_seen ?? null)}
             </p>
           )
         )}
@@ -165,7 +166,7 @@ export default function GroupInfoModal({ open, onClose, conversation }: Props) {
                   src={m.user.avatar_url}
                   seed={m.user.id}
                   size={36}
-                  online={isOnline(m.user.id)}
+                  online={!!presence[m.user.id]?.is_online}
                 />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">

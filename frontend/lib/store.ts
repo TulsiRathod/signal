@@ -336,6 +336,22 @@ export const useStore = create<StoreState>((set, get) => ({
         break;
       }
 
+      case "message.gone": {
+        // A disappearing message expired — remove it everywhere.
+        const { message_id, conversation_id } = payload;
+        set((s) => {
+          const list = s.messages[conversation_id];
+          if (!list) return {} as any;
+          return {
+            messages: {
+              ...s.messages,
+              [conversation_id]: list.filter((m) => m.id !== message_id),
+            },
+          };
+        });
+        break;
+      }
+
       case "typing.start":
       case "typing.stop": {
         const { conversation_id, user_id } = payload;

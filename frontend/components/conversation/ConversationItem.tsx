@@ -13,11 +13,14 @@ export default function ConversationItem({
   const me = useStore((s) => s.currentUser)!;
   const activeConvId = useStore((s) => s.activeConvId);
   const setActiveConv = useStore((s) => s.setActiveConv);
-  const isOnline = useStore((s) => s.isOnline);
   const typing = useStore((s) => s.typing[conversation.id]);
 
   const title = conversationTitle(conversation, me.id);
   const other = otherMember(conversation, me.id);
+  // Subscribe to the presence value directly so the dot updates live.
+  const otherOnline = useStore((s) =>
+    other ? !!s.presence[other.id]?.is_online : false
+  );
   const active = activeConvId === conversation.id;
   const unread = conversation.unread_count;
 
@@ -60,7 +63,7 @@ export default function ConversationItem({
         seed={conversation.type === "group" ? conversation.id + 1000 : other?.id}
         size={48}
         online={
-          conversation.type === "direct" && other ? isOnline(other.id) : undefined
+          conversation.type === "direct" && other ? otherOnline : undefined
         }
       />
       <div className="min-w-0 flex-1">

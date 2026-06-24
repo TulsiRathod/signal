@@ -69,3 +69,11 @@ export function lastSeenText(iso: string | null): string {
 export function sameDay(a: string, b: string): boolean {
   return new Date(a).toDateString() === new Date(b).toDateString();
 }
+
+/** Compact label for a disappearing-messages duration, e.g. 300 -> "5m". */
+export function disappearLabel(seconds: number): string {
+  if (seconds % 86400 === 0) return `${seconds / 86400}d`;
+  if (seconds % 3600 === 0) return `${seconds / 3600}h`;
+  if (seconds % 60 === 0) return `${seconds / 60}m`;
+  return `${seconds}s`;
+}

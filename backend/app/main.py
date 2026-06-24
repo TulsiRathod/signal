@@ -1,4 +1,5 @@
 """FastAPI application entrypoint."""
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -8,12 +9,17 @@ from fastapi.staticfiles import StaticFiles
 from app.api import auth, contacts, conversations, messages, users, ws
 from app.config import settings
 from app.database import init_db
+from app.services.expiry import expiry_loop
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
-    yield
+    sweeper = asyncio.create_task(expiry_loop())  # disappearing-message sweep
+    try:
+        yield
+    finally:
+        sweeper.cancel()
 
 
 app = FastAPI(title="Signal Clone API", version="1.0.0", lifespan=lifespan)

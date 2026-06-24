@@ -4,7 +4,7 @@ import { useStore } from "@/lib/store";
 import type { Conversation, Message } from "@/lib/types";
 import { avatarColor, bubbleTime } from "@/lib/utils";
 import clsx from "clsx";
-import { Reply, Smile, Trash2 } from "lucide-react";
+import { Reply, Smile, Timer, Trash2 } from "lucide-react";
 import { useState } from "react";
 import Avatar from "../ui/Avatar";
 import Checks from "./Checks";
@@ -138,6 +138,9 @@ export default function MessageBubble({
               isOwn ? "text-white/80" : "text-muted"
             )}
           >
+            {message.disappear_after && (
+              <Timer size={12} className="opacity-70" />
+            )}
             <span>{bubbleTime(message.created_at)}</span>
             {isOwn && !message.is_deleted && <Checks status={message.status} />}
           </div>

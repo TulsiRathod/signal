@@ -44,7 +44,12 @@ delivery/read receipts — on top of a clean FastAPI + Next.js architecture.
 - 😀 **Emoji reactions**
 - ↩️ **Reply / quoted messages**
 - 🖼️ **Image & file attachments**
-- ⌨️ Enter-to-send / Shift+Enter newline
+- ⏲️ **Disappearing messages** (functional) — per-conversation timer; a backend sweep
+  deletes expired messages and broadcasts their removal in real time
+- ⌨️ **Keyboard shortcuts** (`Ctrl/⌘+K` search, `Ctrl/⌘+Shift+L` dark mode,
+  `Alt+↑/↓` switch chats, `?` help, Enter-to-send)
+- 🟢 **Real-time presence** — online dot + last-seen, driven by WebSocket connect/
+  disconnect with a client heartbeat
 
 ---
 
@@ -182,6 +187,27 @@ JSON envelopes `{ "type": ..., "payload": ... }`.
   `presence.update`, `presence.bulk`, `reaction.update`, `conversation.new`, `member.update`
 
 ---
+
+## Security Model
+
+The backend is the source of truth and enforces access on **every** request — the
+frontend never decides what a user may see.
+
+- **Authentication** — all endpoints except `register`/`login`/`request-otp`/`verify-otp`
+  require a valid JWT (`Authorization: Bearer …`). Without one, the API returns `401`.
+  The same token authenticates the WebSocket (`/ws?token=…`).
+- **Authorization** — every read/write checks **conversation membership** server-side
+  (`_require_member` / `_ensure_member`). A user cannot read or post to a conversation they
+  aren't a member of, and admin-only actions (add/remove members) re-check the caller's role.
+  So even crafting requests by hand only ever reaches your *own* data.
+- **What this does and doesn't prevent.** A browser app must make its API calls in the
+  browser, so they're always visible in DevTools and replayable with the user's own token —
+  this is true of every web app (Signal, WhatsApp Web, etc.) and **cannot** be fully blocked.
+  What matters is enforced here: outsiders can't call the API (no token → 401), and a logged-in
+  user can't reach anyone else's data (membership checks). Passwords/OTP are never stored in
+  plaintext, and tokens are signed with `SECRET_KEY`.
+- **Hardening for production** (out of scope for the demo): rate limiting, refresh-token
+  rotation, per-origin CORS lockdown, and moving uploads to object storage.
 
 ## Getting Started (Local)
 

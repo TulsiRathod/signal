@@ -136,9 +136,14 @@ class ConversationOut(BaseModel):
     avatar_url: str | None
     created_by: int | None
     updated_at: datetime
+    disappear_seconds: int | None = None
     members: list[MemberOut] = []
     last_message: MessageOut | None = None
     unread_count: int = 0
+
+
+class SetDisappearing(BaseModel):
+    seconds: int | None = None  # None or 0 turns it off
 
 
 class AttachmentIn(BaseModel):

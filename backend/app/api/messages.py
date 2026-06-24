@@ -49,13 +49,18 @@ async def send_message(
 ) -> MessageOut:
     await _ensure_member(db, body.conversation_id, current.id)
 
+    conv = await db.get(Conversation, body.conversation_id)
+    # A conversation-level disappearing timer applies to every new message
+    # (an explicit per-message value, if given, takes precedence).
+    disappear = body.disappear_after or (conv.disappear_seconds or None)
+
     msg = Message(
         conversation_id=body.conversation_id,
         sender_id=current.id,
         content=body.content,
         type=body.type,
         reply_to_id=body.reply_to_id,
-        disappear_after=body.disappear_after,
+        disappear_after=disappear,
         status="sent",
     )
     db.add(msg)
@@ -73,7 +78,6 @@ async def send_message(
         )
 
     # Bump conversation activity for list ordering.
-    conv = await db.get(Conversation, body.conversation_id)
     conv.updated_at = datetime.now(timezone.utc)
 
     member_ids = await get_member_ids(db, body.conversation_id)

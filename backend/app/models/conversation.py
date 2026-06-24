@@ -18,6 +18,8 @@ class Conversation(Base):
     type: Mapped[str] = mapped_column(String(16), default="direct")  # direct | group
     name: Mapped[str | None] = mapped_column(String(128))  # group only
     avatar_url: Mapped[str | None] = mapped_column(String(512))
+    # Disappearing-messages timer (seconds). None/0 = off. Applied to new messages.
+    disappear_seconds: Mapped[int | None] = mapped_column(default=None)
     created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

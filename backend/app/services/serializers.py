@@ -148,6 +148,7 @@ async def serialize_conversation(
         "avatar_url": conv.avatar_url,
         "created_by": conv.created_by,
         "updated_at": conv.updated_at.isoformat(),
+        "disappear_seconds": conv.disappear_seconds,
         "members": members,
         "last_message": serialize_message(last_msg_obj) if last_msg_obj else None,
         "unread_count": await _unread_count(db, conv.id, current_user_id),

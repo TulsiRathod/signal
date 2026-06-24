@@ -29,16 +29,16 @@ async def websocket_endpoint(ws: WebSocket, token: str = "") -> None:
 
     became_online = await manager.connect(user_id, ws)
 
-    if became_online:
-        async with AsyncSessionLocal() as db:
+    async with AsyncSessionLocal() as db:
+        if became_online:
             await set_presence(db, user_id, True)
-            # Send the newly-connected client the current online peers.
-            peers = await peers_of(db, user_id)
-        online_peers = [uid for uid in peers if manager.is_online(uid)]
-        await manager.send_to_user(
-            user_id,
-            {"type": "presence.bulk", "payload": {"online": online_peers}},
-        )
+        peers = await peers_of(db, user_id)
+    # Always tell this connection who is currently online (covers extra tabs).
+    online_peers = [uid for uid in peers if manager.is_online(uid)]
+    await manager.send_to_user(
+        user_id,
+        {"type": "presence.bulk", "payload": {"online": online_peers}},
+    )
 
     try:
         while True:

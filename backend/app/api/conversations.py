@@ -14,6 +14,7 @@ from app.schemas.schemas import (
     ConversationCreate,
     ConversationOut,
     MessageOut,
+    SetDisappearing,
 )
 from app.services.serializers import (
     get_member_ids,
@@ -219,6 +220,44 @@ async def remove_member(
     )
     await db.commit()
     return await _broadcast_member_update(db, conv_id, current.id, extra_user=user_id)
+
+
+@router.patch("/{conv_id}/disappearing", response_model=ConversationOut)
+async def set_disappearing(
+    conv_id: int,
+    body: SetDisappearing,
+    db: AsyncSession = Depends(get_db),
+    current: User = Depends(get_current_user),
+) -> ConversationOut:
+    await _require_member(db, conv_id, current.id)
+    conv = await db.get(Conversation, conv_id)
+    seconds = body.seconds if body.seconds and body.seconds > 0 else None
+    conv.disappear_seconds = seconds
+    db.add(
+        Message(
+            conversation_id=conv_id,
+            sender_id=current.id,
+            type="system",
+            content=(
+                f"{current.display_name} set disappearing messages to "
+                f"{_duration_label(seconds)}"
+                if seconds
+                else f"{current.display_name} turned off disappearing messages"
+            ),
+        )
+    )
+    await db.commit()
+    return await _broadcast_member_update(db, conv_id, current.id)
+
+
+def _duration_label(seconds: int) -> str:
+    if seconds % 86400 == 0:
+        return f"{seconds // 86400}d"
+    if seconds % 3600 == 0:
+        return f"{seconds // 3600}h"
+    if seconds % 60 == 0:
+        return f"{seconds // 60}m"
+    return f"{seconds}s"
 
 
 # --------------------------- helpers ---------------------------

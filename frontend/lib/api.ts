@@ -151,6 +151,12 @@ export const api = {
   deleteMessage: (messageId: number) =>
     request<Message>(`/messages/${messageId}`, { method: "DELETE" }),
 
+  setDisappearing: (convId: number, seconds: number | null) =>
+    request<Conversation>(`/conversations/${convId}/disappearing`, {
+      method: "PATCH",
+      body: JSON.stringify({ seconds }),
+    }),
+
   addMembers: (convId: number, userIds: number[]) =>
     request<Conversation>(`/conversations/${convId}/members`, {
       method: "POST",

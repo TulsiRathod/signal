@@ -1,20 +1,70 @@
 "use client";
 import ChatPane from "@/components/chat/ChatPane";
 import Sidebar from "@/components/conversation/Sidebar";
+import ShortcutsModal from "@/components/modals/ShortcutsModal";
 import Toasts from "@/components/ui/Toasts";
 import { ApiError, clearToken, getToken } from "@/lib/api";
 import { useStore } from "@/lib/store";
+import { useTheme } from "@/lib/theme";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function Home() {
   const router = useRouter();
+  const { toggle: toggleTheme } = useTheme();
   const [ready, setReady] = useState(false);
   const [connError, setConnError] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const currentUser = useStore((s) => s.currentUser);
   const activeConvId = useStore((s) => s.activeConvId);
   const bootstrap = useStore((s) => s.bootstrap);
+
+  // Global keyboard shortcuts.
+  useEffect(() => {
+    const isTyping = (el: EventTarget | null) => {
+      const t = el as HTMLElement | null;
+      return (
+        !!t &&
+        (t.tagName === "INPUT" ||
+          t.tagName === "TEXTAREA" ||
+          t.isContentEditable)
+      );
+    };
+    const onKey = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey;
+      if (mod && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        window.dispatchEvent(new Event("signal:focus-search"));
+      } else if (mod && e.shiftKey && e.key.toLowerCase() === "l") {
+        e.preventDefault();
+        toggleTheme();
+      } else if (!isTyping(e.target) && e.key === "?") {
+        e.preventDefault();
+        setHelpOpen(true);
+      } else if (
+        !isTyping(e.target) &&
+        e.altKey &&
+        (e.key === "ArrowDown" || e.key === "ArrowUp")
+      ) {
+        e.preventDefault();
+        const { conversations, activeConvId: cur, setActiveConv } =
+          useStore.getState();
+        if (!conversations.length) return;
+        const idx = conversations.findIndex((c) => c.id === cur);
+        let next = idx === -1 ? 0 : e.key === "ArrowDown" ? idx + 1 : idx - 1;
+        next = Math.max(0, Math.min(conversations.length - 1, next));
+        setActiveConv(conversations[next].id);
+      }
+    };
+    const showHelp = () => setHelpOpen(true);
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("signal:show-shortcuts", showHelp);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("signal:show-shortcuts", showHelp);
+    };
+  }, [toggleTheme]);
 
   function start() {
     if (!getToken()) {
@@ -91,6 +141,7 @@ export default function Home() {
       </div>
 
       <Toasts />
+      <ShortcutsModal open={helpOpen} onClose={() => setHelpOpen(false)} />
     </main>
   );
 }

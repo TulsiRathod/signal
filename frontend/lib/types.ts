@@ -64,6 +64,7 @@ export interface Conversation {
   avatar_url: string | null;
   created_by: number | null;
   updated_at: string;
+  disappear_seconds: number | null;
   members: Member[];
   last_message: Message | null;
   unread_count: number;

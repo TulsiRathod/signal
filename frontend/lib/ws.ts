@@ -13,6 +13,7 @@ class WsClient {
   private ws: WebSocket | null = null;
   private handlers = new Set<Handler>();
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
   private shouldRun = false;
   private connectedHandlers = new Set<(connected: boolean) => void>();
 
@@ -30,6 +31,7 @@ class WsClient {
 
     this.ws.onopen = () => {
       this.connectedHandlers.forEach((h) => h(true));
+      this.startHeartbeat();
     };
 
     this.ws.onmessage = (e) => {
@@ -43,6 +45,7 @@ class WsClient {
 
     this.ws.onclose = () => {
       this.connectedHandlers.forEach((h) => h(false));
+      this.stopHeartbeat();
       if (this.shouldRun) {
         this.scheduleReconnect();
       }
@@ -51,6 +54,23 @@ class WsClient {
     this.ws.onerror = () => {
       this.ws?.close();
     };
+  }
+
+  // Periodic ping keeps the socket alive through idle proxies (e.g. Render)
+  // and lets the server detect dead connections promptly for accurate presence.
+  private startHeartbeat() {
+    this.stopHeartbeat();
+    this.heartbeatTimer = setInterval(
+      () => this.send({ type: "ping", payload: {} }),
+      25000
+    );
+  }
+
+  private stopHeartbeat() {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
   }
 
   private scheduleReconnect() {
@@ -83,6 +103,7 @@ class WsClient {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
+    this.stopHeartbeat();
     this.ws?.close();
     this.ws = null;
   }
